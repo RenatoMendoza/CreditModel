@@ -1,20 +1,33 @@
 import pandas as pd
 import numpy as np
 
+def cargar_datos_csv(file_path='/mnt/data/credit_score.csv'):
+    """
+    Carga los datos de crédito desde un archivo CSV.
+
+    Parámetros:
+    - file_path: Ruta del archivo CSV (por defecto '/mnt/data/credit_score.csv').
+
+    Retorna:
+    - Un DataFrame de pandas con los datos de crédito o None en caso de error.
+    """
+    try:
+        df = pd.read_csv(file_path)
+        print(f"Datos cargados exitosamente desde {file_path}")
+        return df
+    except Exception as e:
+        print(f"Error al cargar el archivo CSV: {e}")
+        return None
+
 class FICOScoreModel:
     """
-    A simplified implementation of a FICO-like credit scoring model.
-    
-    This model incorporates the five major components that influence FICO scores:
-    1. Payment History (35%)
-    2. Amounts Owed (30%)
-    3. Length of Credit History (15%)
-    4. Credit Mix (10%)
-    5. New Credit (10%)
+    Una implementación simplificada de un modelo de puntaje de crédito tipo FICO.
+    Este modelo evalúa cinco componentes: historial de pagos, montos adeudados, 
+    antigüedad del historial, mezcla de crédito y nuevo crédito.
     """
     
     def __init__(self):
-        # Define the component weights based on FICO's published methodology
+        # Definir los pesos de cada componente según la metodología FICO
         self.weights = {
             'payment_history': 0.35,
             'amounts_owed': 0.30,
@@ -23,41 +36,51 @@ class FICOScoreModel:
             'new_credit': 0.10
         }
         
-        # Initialize score ranges - FICO scores range from 300-850
+        # Rango de puntaje FICO: 300-850
         self.min_score = 300
         self.max_score = 850
     
-    def calculate_payment_history_score(self, 
-                                       late_payments_30_days=0,
-                                       late_payments_60_days=0, 
-                                       late_payments_90_days=0,
-                                       months_on_file=0):
+    def calculate_payment_history_score(self, delay_from_due_date, months_on_file=0):
         """
-        Calculate score component for payment history.
-        
-        Parameters:
-        - late_payments_*: Count of late payments in the respective category
-        - months_on_file: Total months of credit history
+        Calcula el componente del historial de pagos utilizando la columna 'delay_from_due_date'.
+
+        Parámetros:
+        - delay_from_due_date: Valor único o una serie de valores que indican el retraso 
+                               (en días) respecto a la fecha de vencimiento.
+        - months_on_file: Total de meses en el historial crediticio.
+
+        Retorna:
+        - Un puntaje entre 0 y 100 basado en el historial de pagos.
         """
-        # Base score for perfect payment history
+        # Si se recibe una lista o serie, convertir a array y contar retrasos en cada rango
+        if isinstance(delay_from_due_date, (list, np.ndarray)) or hasattr(delay_from_due_date, 'to_numpy'):
+            delays = np.array(delay_from_due_date)
+            late_payments_30_days = np.sum((delays > 0) & (delays <= 30))
+            late_payments_60_days = np.sum((delays > 30) & (delays <= 60))
+            late_payments_90_days = np.sum((delays > 60) & (delays <= 90))
+        else:
+            # Si se recibe un solo valor
+            delay = delay_from_due_date
+            late_payments_30_days = 1 if 0 < delay <= 30 else 0
+            late_payments_60_days = 1 if 30 < delay <= 60 else 0
+            late_payments_90_days = 1 if 60 < delay <= 90 else 0
+
+        # Puntaje base para un historial perfecto
         base_score = 100
-        
-        # Calculate deductions based on negative items
-        deductions = 0
-        
-        # Late payments have increasing impact based on severity
-        deductions += late_payments_30_days * 10
-        deductions += late_payments_60_days * 20
-        deductions += late_payments_90_days * 40
-        
-        # Ensure score doesn't go below 0
+
+        # Aplicar deducciones según la gravedad de los retrasos
+        deductions = (late_payments_30_days * 10 +
+                      late_payments_60_days * 20 +
+                      late_payments_90_days * 40)
+
+        # Calcular puntaje crudo
         raw_score = max(0, base_score - deductions)
-        
-        # Normalize score if necessary based on months on file
+
+        # Ajustar puntaje si el historial es muy corto
         if months_on_file < 12:
             raw_score *= (0.5 + (months_on_file / 24))
-        
-        return min(raw_score, 100)  # Cap at 100
+
+        return min(raw_score, 100)  # Se asegura que el puntaje no supere 100
     
     def calculate_credit_utilization_score(self, 
                                    credit_utilization_ratio):
