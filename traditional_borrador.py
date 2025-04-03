@@ -49,35 +49,56 @@ class FICOScoreModel:
         - months_on_file: Total de meses en el historial crediticio.
 
         Retorna:
-        - Un puntaje entre 0 y 100 basado en el historial de pagos.
+        - final_score: Puntaje final (entre 0 y 100).
+        - values_array: Lista con los valores intermedios usados en el cálculo.
         """
-        # Si se recibe una lista, array o una columna de DataFrame, convertir a array
+        # Imprimir valores recibidos para depuración
+        print("delay_from_due_date:", delay_from_due_date)
+        print("months_on_file:", months_on_file)
+        
+        # Inicializar el array para almacenar los valores
+        values_array = []
+        values_array.append(delay_from_due_date)  # Valor original de delay_from_due_date
+        values_array.append(months_on_file)
+        
+        # Procesar delay_from_due_date: convertir a array si es necesario
         if isinstance(delay_from_due_date, (list, np.ndarray)) or hasattr(delay_from_due_date, 'to_numpy'):
             delays = np.array(delay_from_due_date)
             late_payments_30_days = np.sum((delays > 0) & (delays <= 30))
             late_payments_60_days = np.sum((delays > 30) & (delays <= 60))
             late_payments_90_days = np.sum((delays > 60) & (delays <= 90))
         else:
-            # Si se recibe un valor único
             delay = delay_from_due_date
             late_payments_30_days = 1 if 0 < delay <= 30 else 0
             late_payments_60_days = 1 if 30 < delay <= 60 else 0
             late_payments_90_days = 1 if 60 < delay <= 90 else 0
 
-        base_score = 100  # Puntaje base para un historial perfecto
+        # Guardar los conteos de pagos atrasados
+        values_array.append(late_payments_30_days)
+        values_array.append(late_payments_60_days)
+        values_array.append(late_payments_90_days)
 
-        # Aplicar deducciones según la gravedad de los retrasos
+        base_score = 100  # Puntaje base para un historial perfecto
+        values_array.append(base_score)
+
         deductions = (late_payments_30_days * 10 +
                       late_payments_60_days * 20 +
                       late_payments_90_days * 40)
+        values_array.append(deductions)
 
         raw_score = max(0, base_score - deductions)
+        values_array.append(raw_score)
 
         # Ajustar puntaje si el historial es muy corto
         if months_on_file < 12:
             raw_score *= (0.5 + (months_on_file / 24))
+            values_array.append(raw_score)  # Puntaje ajustado por la antigüedad
 
-        return min(raw_score, 100)  # Se asegura que el puntaje no supere 100
+        final_score = min(raw_score, 100)
+        values_array.append(final_score)  # Puntaje final
+
+        print("Payment History Data:", values_array)
+        return final_score, values_array
 
     def calculate_credit_utilization_score(self, credit_utilization_ratio):
         if credit_utilization_ratio <= 0.10:
@@ -241,7 +262,7 @@ if __name__ == "__main__":
     
     if datos_credito is not None:
         # Ejemplo: Filtrar datos de un cliente específico
-        cliente_id = 'CUS_0xd40'
+        cliente_id = 'CUS_0xb891'
         datos_cliente = datos_credito[datos_credito['customer_id'] == cliente_id]
         
         # Convertir a diccionario usando el primer registro (o definir cómo agrupar si hay múltiples registros)
