@@ -3,6 +3,7 @@ import numpy as np
 
 class FICOScoreModel:
     def calculate_payment_history_score(self, delay_from_due_date, months_on_file=0):
+        # Uses avg_delay and avg_credit_history as inputs.
         values_array = []
         values_array.append(delay_from_due_date)
         values_array.append(months_on_file)
@@ -43,6 +44,7 @@ class FICOScoreModel:
         return final_score, values_array
 
     def calculate_credit_utilization_score(self, credit_utilization_ratio):
+        # Assumes avg_outstanding_debt represents a utilization ratio (0-1)
         if credit_utilization_ratio <= 0.10:
             utilization_score = 100
         elif credit_utilization_ratio <= 0.20:
@@ -66,6 +68,7 @@ class FICOScoreModel:
         return min(utilization_score, 100)
 
     def calculate_length_of_history_score(self, credit_history_age_months=0):
+        # Uses avg_credit_history as months on file
         if credit_history_age_months >= 240:
             oldest_account_score = 100
         elif credit_history_age_months >= 180:
@@ -82,43 +85,12 @@ class FICOScoreModel:
             oldest_account_score = 30
         return min(oldest_account_score, 100)
 
-    def calculate_credit_mix_score(self, num_of_loan=0, type_of_loan=None):
-        if num_of_loan == 0:
-            return 30
-
-        if isinstance(type_of_loan, str):
-            types = [t.strip().lower() for t in type_of_loan.split(',')]
-        elif isinstance(type_of_loan, list):
-            types = [str(t).strip().lower() for t in type_of_loan]
-        else:
-            types = []
-        
-        unique_types = set(types)
-        account_types = len(unique_types)
-        diversity_ratio = account_types / 4
-        if diversity_ratio >= 0.75:
-            diversity_score = 100
-        elif diversity_ratio >= 0.50:
-            diversity_score = 80
-        elif diversity_ratio >= 0.25:
-            diversity_score = 60
-        else:
-            diversity_score = 40
-
-        revolving_keywords = ['card', 'retail']
-        installment_keywords = ['installment', 'mortgage']
-
-        has_revolving = any(any(keyword in loan_type for keyword in revolving_keywords)
-                            for loan_type in unique_types)
-        has_installment = any(any(keyword in loan_type for keyword in installment_keywords)
-                              for loan_type in unique_types)
-        has_good_mix = has_revolving and has_installment
-        mix_score = 100 if has_good_mix else 70
-
-        raw_score = diversity_score * 0.60 + mix_score * 0.40
-        return min(raw_score, 100)
+    def calculate_credit_mix_score(self, avg_credit_mix=0):
+        # Here we assume avg_credit_mix is already a score between 0 and 100.
+        return min(max(avg_credit_mix, 0), 100)
 
     def calculate_new_credit_score(self, inquiries_last_12_months=0):
+        # Uses avg_num_inquires
         if inquiries_last_12_months == 0:
             recent_inquiries_score = 100
         elif inquiries_last_12_months == 1:
@@ -132,22 +104,22 @@ class FICOScoreModel:
         return min(recent_inquiries_score, 100)
 
     def calculate_fico_score(self, credit_profile):
+        # Map the new keys from the DataFrame
         payment_history_score, _ = self.calculate_payment_history_score(
-            delay_from_due_date=credit_profile.get('delay_from_due_date', []),
-            months_on_file=credit_profile.get('credit_history_age', 0)
+            delay_from_due_date=credit_profile.get('avg_delay'),
+            months_on_file=credit_profile.get('avg_credit_history', 0)
         )
         credit_utilization_score = self.calculate_credit_utilization_score(
-            credit_utilization_ratio=credit_profile.get('credit_utilization_ratio', 0.0)
+            credit_utilization_ratio=credit_profile.get('avg_outstanding_debt', 0.0)
         )
         length_of_history_score = self.calculate_length_of_history_score(
-            credit_history_age_months=credit_profile.get('credit_history_age', 0)
+            credit_history_age_months=credit_profile.get('avg_credit_history', 0)
         )
         credit_mix_score = self.calculate_credit_mix_score(
-            num_of_loan=credit_profile.get('num_of_loan', 0),
-            type_of_loan=credit_profile.get('type_of_loan', None)
+            avg_credit_mix=credit_profile.get('avg_credit_mix', 0)
         )
         new_credit_score = self.calculate_new_credit_score(
-            inquiries_last_12_months=credit_profile.get('num_credit_inquiries', 0)
+            inquiries_last_12_months=credit_profile.get('avg_num_inquires', 0)
         )
         weighted_scores = {
             'payment_history': payment_history_score * 0.35,
@@ -173,16 +145,19 @@ class FICOScoreModel:
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         results = []
+        # Group by customer_id (assuming there could be duplicate rows per customer)
         grouped = data.groupby('customer_id').first()
         for _, row in grouped.iterrows():
             profile = row.to_dict()
             score_result = self.calculate_fico_score(profile)
             results.append({
-                "User Name": profile.get('name', 'Sin Nombre'),
                 "Customer ID": profile.get('customer_id'),
-                "Delay From Due Date": profile.get('delay_from_due_date'),
-                "Months on File": profile.get('credit_history_age'),
-                "FICO Score": score_result.get('fico_score'),
+                "Avg Credit History": profile.get('avg_credit_history'),
+                "Avg Delay": profile.get('avg_delay'),
+                "Avg Num Inquires": profile.get('avg_num_inquires'),
+                "Avg Outstanding Debt": profile.get('avg_outstanding_debt'),
+                "Avg Credit Mix": profile.get('avg_credit_mix'),
+                "Calculated FICO Score": score_result.get('fico_score'),
                 "Payment History Score": score_result.get('component_scores', {}).get('payment_history'),
                 "Amounts Owed Score": score_result.get('component_scores', {}).get('amounts_owed'),
                 "Length of History Score": score_result.get('component_scores', {}).get('length_of_history'),
