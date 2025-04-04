@@ -3,8 +3,6 @@ import numpy as np
 
 class FICOScoreModel:
     def calculate_payment_history_score(self, delay_from_due_date, months_on_file=0):
-        print("delay_from_due_date:", delay_from_due_date)
-        print("months_on_file:", months_on_file)
         values_array = []
         values_array.append(delay_from_due_date)
         values_array.append(months_on_file)
@@ -42,7 +40,6 @@ class FICOScoreModel:
         final_score = min(raw_score, 100)
         values_array.append(final_score)
 
-        print("Payment History Data:", values_array)
         return final_score, values_array
 
     def calculate_credit_utilization_score(self, credit_utilization_ratio):
@@ -135,7 +132,7 @@ class FICOScoreModel:
         return min(recent_inquiries_score, 100)
 
     def calculate_fico_score(self, credit_profile):
-        payment_history_score, ph_values = self.calculate_payment_history_score(
+        payment_history_score, _ = self.calculate_payment_history_score(
             delay_from_due_date=credit_profile.get('delay_from_due_date', []),
             months_on_file=credit_profile.get('credit_history_age', 0)
         )
@@ -174,10 +171,8 @@ class FICOScoreModel:
             'weighted_scores': weighted_scores
         }
     
-    # New method: process the entire DataFrame input
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         results = []
-        # Group by customer_id and take the first record for each customer
         grouped = data.groupby('customer_id').first()
         for _, row in grouped.iterrows():
             profile = row.to_dict()
@@ -195,25 +190,3 @@ class FICOScoreModel:
                 "New Credit Score": score_result.get('component_scores', {}).get('new_credit')
             })
         return pd.DataFrame(results)
-    
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        results = []
-        # Group by customer_id and take the first record for each customer
-        grouped = data.groupby('customer_id').first()
-        for _, row in grouped.iterrows():
-            profile = row.to_dict()
-            score_result = self.calculate_fico_score(profile)
-            results.append({
-                "User Name": profile.get('name', 'Sin Nombre'),
-                "Customer ID": profile.get('customer_id'),
-                "Delay From Due Date": profile.get('delay_from_due_date'),
-                "Months on File": profile.get('credit_history_age'),
-                "FICO Score": score_result.get('fico_score'),
-                "Payment History Score": score_result.get('component_scores', {}).get('payment_history'),
-                "Amounts Owed Score": score_result.get('component_scores', {}).get('amounts_owed'),
-                "Length of History Score": score_result.get('component_scores', {}).get('length_of_history'),
-                "Credit Mix Score": score_result.get('component_scores', {}).get('credit_mix'),
-                "New Credit Score": score_result.get('component_scores', {}).get('new_credit')
-                })
-        return pd.DataFrame(results)
-
