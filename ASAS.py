@@ -10,25 +10,28 @@ class FICOScoreModel:
         
         if isinstance(delay_from_due_date, (list, np.ndarray)) or hasattr(delay_from_due_date, 'to_numpy'):
             delays = np.array(delay_from_due_date)
-            late_payments_30_days = np.sum((delays > 0) & (delays <= 30))
-            late_payments_60_days = np.sum((delays > 30) & (delays <= 60))
-            late_payments_90_days = np.sum((delays > 60) & (delays <= 90))
+            late_payments_15_days = np.sum((delays > 0) & (delays <= 15))
+            late_payments_30_days = np.sum((delays > 15) & (delays <= 30))
+            late_payments_45_days = np.sum((delays > 30) & (delays <= 45))
+            late_payments_60_days = np.sum((delays > 45))
         else:
-            delay = delay_from_due_date
-            late_payments_30_days = 1 if 0 < delay <= 30 else 0
-            late_payments_60_days = 1 if 30 < delay <= 60 else 0
-            late_payments_90_days = 1 if 60 < delay <= 90 else 0
+            late_payments_15_days = 1 if 0 < delay_from_due_date <= 15 else 0
+            late_payments_30_days = 1 if 15 < delay_from_due_date <= 30 else 0
+            late_payments_45_days = 1 if 30 < delay_from_due_date <= 45 else 0
+            late_payments_60_days = 1 if 50 < delay_from_due_date <= 60 else 0
 
+        values_array.append(late_payments_15_days)
         values_array.append(late_payments_30_days)
+        values_array.append(late_payments_45_days)
         values_array.append(late_payments_60_days)
-        values_array.append(late_payments_90_days)
-
+        
         base_score = 100
         values_array.append(base_score)
 
-        deductions = (late_payments_30_days * 10 +
-                      late_payments_60_days * 20 +
-                      late_payments_90_days * 40)
+        deductions = (late_payments_15_days * 10
+                + late_payments_30_days * 30
+                + late_payments_45_days * 50
+                + late_payments_60_days * 70)
         values_array.append(deductions)
 
         raw_score = max(0, base_score - deductions)
@@ -45,35 +48,32 @@ class FICOScoreModel:
 
     def calculate_credit_utilization_score(self, credit_utilization_ratio):
         # Assumes avg_outstanding_debt represents a utilization ratio (0-1)
-        if credit_utilization_ratio <= 0.10:
+        if credit_utilization_ratio <= 0.30:
             utilization_score = 100
-        elif credit_utilization_ratio <= 0.20:
-            utilization_score = 90
-        elif credit_utilization_ratio <= 0.30:
-            utilization_score = 80
         elif credit_utilization_ratio <= 0.40:
-            utilization_score = 70
+            utilization_score = 90
         elif credit_utilization_ratio <= 0.50:
-            utilization_score = 60
+            utilization_score = 80
         elif credit_utilization_ratio <= 0.60:
-            utilization_score = 50
+            utilization_score = 70
         elif credit_utilization_ratio <= 0.70:
-            utilization_score = 40
+            utilization_score = 60
         elif credit_utilization_ratio <= 0.80:
-            utilization_score = 30
+            utilization_score = 50
         elif credit_utilization_ratio <= 0.90:
-            utilization_score = 20
+            utilization_score = 40
+        
         else:
-            utilization_score = 10
+            utilization_score = 20
         return min(utilization_score, 100)
 
     def calculate_length_of_history_score(self, credit_history_age_months=0):
         # Uses avg_credit_history as months on file
-        if credit_history_age_months >= 240:
+        if credit_history_age_months >= 120:
             oldest_account_score = 100
-        elif credit_history_age_months >= 180:
+        elif credit_history_age_months >= 100:
             oldest_account_score = 95
-        elif credit_history_age_months >= 120:
+        elif credit_history_age_months >= 80:
             oldest_account_score = 90
         elif credit_history_age_months >= 60:
             oldest_account_score = 80
@@ -99,12 +99,12 @@ class FICOScoreModel:
         # Uses avg_num_inquires
         if inquiries_last_12_months == 0:
             recent_inquiries_score = 100
-        elif inquiries_last_12_months == 1:
+        elif inquiries_last_12_months <= 2:
             recent_inquiries_score = 90
-        elif inquiries_last_12_months == 2:
+        elif inquiries_last_12_months <= 5:
             recent_inquiries_score = 75
-        elif inquiries_last_12_months <= 4:
-            recent_inquiries_score = 60
+        elif inquiries_last_12_months >= 6:
+            recent_inquiries_score = 50
         else:
             recent_inquiries_score = 40
         return min(recent_inquiries_score, 100)
