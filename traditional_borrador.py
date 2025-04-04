@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def cargar_datos_csv(file_path=r"C:\Users\israe\OneDrive\Documents\8vo semestre\Modelos de crédito\proyecto\CreditModel\credit_score.csv"):
+def cargar_datos_csv(file_path="credit_score.csv"):
     """
     Carga los datos de crédito desde un archivo CSV.
 
@@ -213,7 +213,7 @@ class FICOScoreModel:
 
 if __name__ == "__main__":
     # Función para cargar el CSV en el bloque donde se toman los datos
-    def cargar_datos_csv(file_path=r"C:\Users\israe\OneDrive\Documents\8vo semestre\Modelos de crédito\proyecto\CreditModel\credit_score.csv"):
+    def cargar_datos_csv(file_path="credit_score.csv"):
         try:
             df = pd.read_csv(file_path)
             print(f"Datos cargados exitosamente desde {file_path}")
