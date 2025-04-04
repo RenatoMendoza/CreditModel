@@ -87,7 +87,13 @@ class FICOScoreModel:
 
     def calculate_credit_mix_score(self, avg_credit_mix=0):
         # Here we assume avg_credit_mix is already a score between 0 and 100.
-        return min(max(avg_credit_mix, 0), 100)
+        if avg_credit_mix == 0:
+            mix_score = 20
+        elif avg_credit_mix == 1:
+            mix_score = 60
+        else:
+            mix_score = 100
+        return min(max(mix_score, 0), 100)
 
     def calculate_new_credit_score(self, inquiries_last_12_months=0):
         # Uses avg_num_inquires
