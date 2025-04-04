@@ -157,6 +157,7 @@ class FICOScoreModel:
                 "Avg Num Inquires": profile.get('avg_num_inquires'),
                 "Avg Outstanding Debt": profile.get('avg_outstanding_debt'),
                 "Avg Credit Mix": profile.get('avg_credit_mix'),
+                "Original Credit Score": profile.get('avg_credit_score'),
                 "Calculated FICO Score": score_result.get('fico_score'),
                 "Payment History Score": score_result.get('component_scores', {}).get('payment_history'),
                 "Amounts Owed Score": score_result.get('component_scores', {}).get('amounts_owed'),
