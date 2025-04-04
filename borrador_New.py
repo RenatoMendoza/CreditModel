@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def cargar_datos_csv(file_path='/mnt/data/credit_score.csv'):
+def cargar_datos_csv(file_path='credit_score.csv'):
     """
     Carga los datos de crédito desde un archivo CSV.
 
