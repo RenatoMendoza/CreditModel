@@ -152,12 +152,15 @@ class FICOScoreModel:
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         results = []
         # Group by customer_id (assuming there could be duplicate rows per customer)
-        grouped = data.groupby('customer_id').first()
-        for _, row in grouped.iterrows():
+        # This will group the rows and let us work with each customer's group
+        grouped = data.groupby('customer_id')
+        for cust_id, group in grouped:
+            # Use the first row from the group (or handle duplicates as needed)
+            row = group.iloc[0]
             profile = row.to_dict()
             score_result = self.calculate_fico_score(profile)
             results.append({
-                "Customer ID": profile.get('customer_id'),	
+                "Customer ID": cust_id,  # Using the group key directly
                 "Avg Credit History": profile.get('avg_credit_history'),
                 "Avg Delay": profile.get('avg_delay'),
                 "Avg Num Inquires": profile.get('avg_num_inquires'),
@@ -170,5 +173,5 @@ class FICOScoreModel:
                 "Credit Mix Score": score_result.get('component_scores', {}).get('credit_mix'),
                 "Inquiries Score": score_result.get('component_scores', {}).get('inquiries'),
                 "Calculated FICO Score": score_result.get('fico_score'),
-            })
+        })
         return pd.DataFrame(results)
