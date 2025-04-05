@@ -95,7 +95,7 @@ class FICOScoreModel:
             mix_score = 100
         return min(max(mix_score, 0), 100)
 
-    def calculate_new_credit_score(self, inquiries_last_12_months=0):
+    def calculate_inquiries_score(self, inquiries_last_12_months=0):
         # Uses avg_num_inquires
         if inquiries_last_12_months == 0:
             recent_inquiries_score = 100
@@ -124,7 +124,7 @@ class FICOScoreModel:
         credit_mix_score = self.calculate_credit_mix_score(
             avg_credit_mix=credit_profile.get('avg_credit_mix', 0)
         )
-        new_credit_score = self.calculate_new_credit_score(
+        inquiries_score = self.calculate_inquiries_score(
             inquiries_last_12_months=credit_profile.get('avg_num_inquires', 0)
         )
         weighted_scores = {
@@ -132,7 +132,7 @@ class FICOScoreModel:
             'amounts_owed': credit_utilization_score * 0.30,
             'length_of_history': length_of_history_score * 0.15,
             'credit_mix': credit_mix_score * 0.10,
-            'new_credit': new_credit_score * 0.10
+            'inquiries': inquiries_score * 0.10
         }
         base_score = sum(weighted_scores.values())
         fico_score = int(300 + (base_score / 100) * (850 - 300))
@@ -144,7 +144,7 @@ class FICOScoreModel:
                 'amounts_owed': credit_utilization_score,
                 'length_of_history': length_of_history_score,
                 'credit_mix': credit_mix_score,
-                'new_credit': new_credit_score
+                'inquiries': inquiries_score
             },
             'weighted_scores': weighted_scores
         }
@@ -157,18 +157,18 @@ class FICOScoreModel:
             profile = row.to_dict()
             score_result = self.calculate_fico_score(profile)
             results.append({
-                "Customer ID": profile.get('customer_id'),
+                "Customer ID": profile.get('customer_id'),	
                 "Avg Credit History": profile.get('avg_credit_history'),
                 "Avg Delay": profile.get('avg_delay'),
                 "Avg Num Inquires": profile.get('avg_num_inquires'),
                 "Avg Outstanding Debt": profile.get('avg_outstanding_debt'),
                 "Avg Credit Mix": profile.get('avg_credit_mix'),
                 "Original Credit Score": profile.get('avg_credit_score'),
-                "Calculated FICO Score": score_result.get('fico_score'),
                 "Payment History Score": score_result.get('component_scores', {}).get('payment_history'),
                 "Amounts Owed Score": score_result.get('component_scores', {}).get('amounts_owed'),
                 "Length of History Score": score_result.get('component_scores', {}).get('length_of_history'),
                 "Credit Mix Score": score_result.get('component_scores', {}).get('credit_mix'),
-                "New Credit Score": score_result.get('component_scores', {}).get('new_credit')
+                "Inquiries Score": score_result.get('component_scores', {}).get('inquiries'),
+                "Calculated FICO Score": score_result.get('fico_score'),
             })
         return pd.DataFrame(results)
