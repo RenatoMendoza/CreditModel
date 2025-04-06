@@ -54,10 +54,3 @@ def clean_data_trad(file_name):
 
     return clean_data
 
-def classify_fico(score):
-    if score < 525:
-        return 0  # Bad
-    elif score < 710:
-        return 1  # Standard
-    else:
-        return 2  # Good
