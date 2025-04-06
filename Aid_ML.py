@@ -26,6 +26,8 @@ def clean_data_ml(file_name):
     avg_delay = df.groupby('customer_id')['delay_from_due_date'].mean().round().astype(int).reset_index()['delay_from_due_date']
     avg_num_inquires = df.groupby('customer_id')['num_credit_inquiries'].mean().round().astype(int).reset_index()['num_credit_inquiries']
     avg_credit_score = df.groupby('customer_id')['credit_score'].mean().round().astype(int).reset_index()['credit_score']
+    avg_credit_score = avg_credit_score.replace(2, 1)
+    
     avg_credit_mix = df.groupby('customer_id')['credit_mix'].first().reset_index()['credit_mix']
     avg_outstanding_debt = df.groupby('customer_id')['outstanding_debt'].mean().round().astype(int).reset_index()['outstanding_debt']
     
@@ -41,7 +43,6 @@ def clean_data_ml(file_name):
     'avg_num_credit_card': avg_num_credit_card,
     'avg_num_loans': avg_num_loans,
     'avg_monthly_balance': avg_monthly_balance,
-    'customer_id': unique_id,
     'avg_credit_history': avg_credit_history,
     'avg_delay': avg_delay,
     'avg_num_inquires': avg_num_inquires,
