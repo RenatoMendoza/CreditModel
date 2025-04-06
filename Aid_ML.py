@@ -2,9 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import traditional_borrador as tb
 
-def clean_data_trad(file_name):
+def clean_data_ml(file_name):
     df = pd.read_csv(file_name)
 
     credit_score_mapping = {
@@ -20,7 +19,7 @@ def clean_data_trad(file_name):
     avg_monthly_inhand_salary = df.groupby('customer_id')['monthly_inhand_salary'].mean().round().astype(int).reset_index()['monthly_inhand_salary']
     avg_total_emi_per_month = df.groupby('customer_id')['total_emi_per_month'].mean().round().astype(int).reset_index()['total_emi_per_month']
     avg_num_bank_accounts = df.groupby('customer_id')['num_bank_accounts'].mean().round().astype(int).reset_index()['num_bank_accounts']
-    avg_num_credit_cards = df.groupby('customer_id')['num_credit_cards'].mean().round().astype(int).reset_index()['num_credit_cards']
+    avg_num_credit_card = df.groupby('customer_id')['num_credit_card'].mean().round().astype(int).reset_index()['num_credit_card']
     avg_num_loans = df.groupby('customer_id')['num_of_loan'].mean().round().astype(int).reset_index()['num_of_loan']
     avg_monthly_balance = df.groupby('customer_id')['monthly_balance'].mean().round().astype(int).reset_index()['monthly_balance']
     avg_credit_history = df.groupby('customer_id')['credit_history_age'].mean().round().astype(int).reset_index()['credit_history_age']
@@ -39,7 +38,7 @@ def clean_data_trad(file_name):
     'avg_monthly_inhand_salary': avg_monthly_inhand_salary,
     'avg_total_emi_per_month': avg_total_emi_per_month,
     'avg_num_bank_accounts': avg_num_bank_accounts,
-    'avg_num_credit_cards': avg_num_credit_cards,
+    'avg_num_credit_card': avg_num_credit_card,
     'avg_num_loans': avg_num_loans,
     'avg_monthly_balance': avg_monthly_balance,
     'customer_id': unique_id,
