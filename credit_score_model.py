@@ -12,7 +12,8 @@ def calculate_traditional_credit_score(df):
             - avg_num_inquires
             - avg_outstanding_debt
             - avg_credit_mix
-            
+            - avg_inhand_income (nueva columna incluida)
+         
     Returns:
         DataFrame original con columnas adicionales:
             - history_score: puntaje para historial crediticio
@@ -20,6 +21,7 @@ def calculate_traditional_credit_score(df):
             - inquiries_score: puntaje para consultas
             - debt_score: puntaje para deuda pendiente
             - mix_score: puntaje para mezcla de crédito
+            - income_score: puntaje para ingresos disponibles
             - total_score: puntaje combinado (0-100)
             - fico_score: puntaje escalado (300-850)
             - credit_category: categoría (1=malo, 2=estándar, 3=bueno)
@@ -65,13 +67,23 @@ def calculate_traditional_credit_score(df):
                    65 if mix == 1 else 100
     )
     
-    # Calcular puntaje total utilizando los pesos tradicionales del modelo FICO
+    # Calcular componente de ingresos disponibles (nuevo)
+    result_df['income_score'] = result_df['avg_inhand_income'].apply(
+        lambda income: 20 if income < 1000 else
+                      40 if income < 2000 else
+                      60 if income < 4000 else
+                      80 if income < 10000 else 100
+    )
+    
+    # Calcular puntaje total incluyendo el nuevo componente de ingresos
+    # Ajustamos los pesos para incluir el nuevo factor
     result_df['total_score'] = (
-        result_df['history_score'] * 0.10 +    # 15% Historial 
-        result_df['delay_score'] * 0.35 +      # 35% Retrasos
-        result_df['inquiries_score'] * 0.15 +  # 10% Consultas
-        result_df['debt_score'] * 0.20 +       # 30% Deuda
-        result_df['mix_score'] * 0.20          # 10% Mezcla
+        result_df['history_score'] * 0.10 +     # 10% Historial
+        result_df['delay_score'] * 0.30 +       # 30% Retrasos
+        result_df['inquiries_score'] * 0.10 +   # 10% Consultas
+        result_df['debt_score'] * 0.15 +        # 20% Deuda
+        result_df['mix_score'] * 0.20 +         # 15% Mezcla
+        result_df['income_score'] * 0.15        # 15% Ingresos
     )
     
     # Convertir a escala típica de FICO (300-850)
@@ -80,7 +92,7 @@ def calculate_traditional_credit_score(df):
     # Clasificar en categorías (1=malo, 2=estándar, 3=bueno)
     result_df['credit_category'] = pd.cut(
         result_df['fico_score'], 
-        bins=[0, 560, 730, 850], 
+        bins=[0, 580, 720, 850],
         labels=[0, 1, 2]
     )
     
