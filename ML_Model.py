@@ -117,11 +117,11 @@ def train_xgboost_credit_score_model(data, target_column='avg_credit_score', tes
         plt.figure(figsize=(8, 6))
         cm_best = confusion_matrix(y_test, y_pred_best)
         sns.heatmap(cm_best, annot=True, fmt='d', cmap='Blues', 
-                    xticklabels=['Clase 0', 'Clase 1'], 
-                    yticklabels=['Clase 0', 'Clase 1'])
-        plt.xlabel('Predicción')
-        plt.ylabel('Valor Real')
-        plt.title('Matriz de Confusión - Modelo Optimizado')
+                    xticklabels=['Class 0', 'Class 1'], 
+                    yticklabels=['Class 0', 'Class 1'])
+        plt.xlabel('Prediction')
+        plt.ylabel('Real Value')
+        plt.title('Confusion Matrix - Optimized Model')
         plt.tight_layout()
         plt.show()
     
@@ -129,7 +129,7 @@ def train_xgboost_credit_score_model(data, target_column='avg_credit_score', tes
     if verbose:
         plt.figure(figsize=(12, 6))
         xgb.plot_importance(best_model, max_num_features=10)
-        plt.title('Top 10 Características Más Importantes')
+        plt.title('Top 10 most Important Features')
         plt.tight_layout()
         plt.show()
     
@@ -138,7 +138,7 @@ def train_xgboost_credit_score_model(data, target_column='avg_credit_score', tes
     sorted_importance = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
     
     if verbose:
-        print("\nImportancia de características (peso):")
+        print("\n Feature importance (weight):")
         for feature, importance in sorted_importance:
             print(f"{feature}: {importance}")
     
@@ -146,7 +146,7 @@ def train_xgboost_credit_score_model(data, target_column='avg_credit_score', tes
     if save_model_path:
         best_model.save_model(save_model_path)
         if verbose:
-            print(f"\nModelo guardado como '{save_model_path}'")
+            print(f"\nModel saved as '{save_model_path}'")
     
     # Preparar el resultado a devolver
     results = {
