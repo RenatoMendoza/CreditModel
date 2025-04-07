@@ -44,22 +44,10 @@ Weights are assigned based on domain knowledge and statistical impact, but can b
 
 ### Score Distribution Histogram
 
-This graph shows how credit scores are distributed among users.
 
-![Score Distribution Histogram](sandbox:/mnt/data/image.png)
-
-As seen above, most scores range between 400 and 850 with observable clusters around 650, 700, and 750. This suggests strong separation between user profiles and real-world realism in credit scoring.
 
 ### Confusion Matrix
 
-The confusion matrix compares predicted vs actual user classifications.
-
-![Confusion Matrix](sandbox:/mnt/data/image.png)
-
-- **Good–Good:** 7060 (correctly predicted good credit)
-- **Bad–Bad:** 2686 (correctly predicted bad credit)
-- **Bad–Good:** 1244 (risky misclassifications)
-- **Good–Bad:** 1097 (missed lending opportunities)
 
 ### 📈 Model Accuracy
 
