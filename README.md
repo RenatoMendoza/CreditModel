@@ -62,3 +62,11 @@ This means that over 80% of the classifications made by the FIR model are correc
 4. Classify the score as 'good' or 'bad' using defined thresholds.
 5. Evaluate using the included visualization tools.
 
+## ✍️ Authors
+
+- Alejandro Frizard Aguilar  
+- Israel López Piña  
+- Sergio Renato González Mendoza  
+
+Project for the course **Credit Models**, ITESO.
+
